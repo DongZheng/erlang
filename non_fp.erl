@@ -2,6 +2,8 @@
 -export([generate_teeth/2]).
 
 % e.g., non_fp:generate_teeth("FTTFTTTT", 0.5).
+% when you run this function with a long string (about length > 24) as the 1st param, 
+% your output will not show the entire list, don't freak out
 
 % Present is a string consisteing of 'T' and 'F'
 % 'T' - tooth is present, 'F' - o.w.

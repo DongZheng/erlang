@@ -23,6 +23,7 @@ any_gte_four([H|T]) ->
   	H < 4 -> any_gte_four(T)
   end.
 
+% call alert(PocketDepths).
 alert(List) -> alert(List, 1, []).
 
 alert([], Position, Result) -> lists:reverse(Result);
