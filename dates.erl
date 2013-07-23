@@ -23,19 +23,21 @@ is_leap_year(Year) ->
 julian(S) ->
   DaysPerMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31],
   [Y, M, D] = date_parts(S),
-  julian(Y, M, D, DaysPerMonth, 0).
 
-julian(Y, M, D, DPM, Result) when M > (13 - length(DPM)) ->
-  [H|T] = DPM,
-  julian(Y, M, D, T, Result + H);
+  % A is the full month to be calculated
+  {A, B} = lists:split(M - 1, DaysPerMonth),
+  julian(Y, M, D, A, 0).
   
-julian(Y, M, D, DPM, Result) -> 
+julian(Y, M, D, [], Result) -> 
   % illegal: if is_leap_year(Y) -> 
   % call to local/imported function any_gte_four/1 is illegal in guard
   Is = is_leap_year(Y),
   if 
   	M > 2, Is -> Result + D + 1;
     M =< 2; not Is -> Result + D
-  end.
+  end;
+
+julian(Y, M, D, [H|T], Result) ->
+  julian(Y, M, D, T, Result + H).
 
 
