@@ -7,8 +7,12 @@
 -export([sum/1, sum_of_squares/1]).
 
 minimum(List) -> 
-  [H|_] = List,
-  minimum(List, H).
+  try 
+    [H|_] = List,
+    minimum(List, H)
+  catch 
+    error:Error -> {error, badarg}
+  end.
 
 minimum([], C) -> C;
 
@@ -38,12 +42,20 @@ sum(List) ->
   lists:foldl(fun(X, Y) -> X + Y end, 0, List).
 
 mean(List) -> 
-  sum(List)/length(List).
+  try
+    sum(List)/length(List)
+  catch
+    error:Error -> {error, badarith}
+  end.
 
 sum_of_squares(List) ->
   lists:foldl(fun(X, Y) -> X * X + Y end, 0, List).
 
 stdv(List) -> 
-  N = length(List),
-  Sum = sum(List),
-  math:sqrt((sum_of_squares(List) * N - Sum * Sum) / (N * (N - 1))).
+  try
+    N = length(List),
+    Sum = sum(List),
+    math:sqrt((sum_of_squares(List) * N - Sum * Sum) / (N * (N - 1)))
+  catch 
+    error:Error -> {error, badarith}
+  end.
