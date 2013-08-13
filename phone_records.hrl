@@ -1,0 +1,1 @@
+-record(phone, {number, starting_time, end_time}).

@@ -1,10 +1,10 @@
 -module(dates).
--export([date_parts/1]).
+-export([date_parts/2]).
 -export([julian/1]).
 
-date_parts(S) ->
+date_parts(S, Delimiter) ->
   % re:split/3 here returns a list of strings
-  [Y, M, D] = re:split(S, "[-]", [{return, list}]),
+  [Y, M, D] = re:split(S, "[" ++ Delimiter ++ "]", [{return, list}]),
   
   % string:to_integer/1 returns a tuple, including the integer contents of the string, plus leftovers.
   % e.g., 
@@ -22,7 +22,7 @@ is_leap_year(Year) ->
 
 julian(S) ->
   DaysPerMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31],
-  [Y, M, D] = date_parts(S),
+  [Y, M, D] = date_parts(S, "-"),
 
   % A is the full month to be calculated
   {A, B} = lists:split(M - 1, DaysPerMonth),
