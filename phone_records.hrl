@@ -1,1 +1,2 @@
 -record(phone, {number, starting_time, end_time}).
+-record(customer, {number, last_name, first_name, middle_name, rate_paid_per_minute}).
