@@ -1,7 +1,9 @@
 -module(phone_mnesia).
--export([setup/2]).
+-export([setup/2, summary/3]).
 -include("phone_records.hrl").
 -import(dates, [date_parts/1]).
+-import(phone_ets, [duration/1]).
+-include_lib("stdlib/include/qlc.hrl").
 
 % create the Mnesia tables for the two input files
 setup(PhoneFile, CustomerFile) ->
@@ -14,7 +16,8 @@ setup(PhoneFile, CustomerFile) ->
   Create_customer_record = fun(Line) -> 
     % option {return, list} is a must, otherwise N will be of type iodata rather than string, looks like <<"650-555-3326">>
     [N, LN, FN, MN, RPPM] = re:split(Line, "[,]", [{return, list}]),
-    #customer{number=N, last_name=LN, first_name=FN, middle_name=MN, rate_paid_per_minute=RPPM}
+    {F, _} = string:to_float(RPPM),
+    #customer{number=N, last_name=LN, first_name=FN, middle_name=MN, rate_paid_per_minute=F}
   end,
 
   % High-order function to create phone record from one line of data
@@ -31,6 +34,40 @@ setup(PhoneFile, CustomerFile) ->
 
   % create a table based on the customer record type and load customer data file into mnesia
   fill_table(customer, CustomerFile, Create_customer_record, record_info(fields, customer), set).
+
+summary(LN, FN, MN) ->
+  % look up the customer table matching the input params
+  QHandle = qlc:q( [ C || 
+    C <- mnesia:table(customer),
+    C#customer.last_name == LN,
+    C#customer.first_name == FN,
+    C#customer.middle_name == MN]
+    ),
+  {atomic, Customers} = mnesia:transaction(
+    fun() -> qlc:e(QHandle) end
+    ),
+  Customer = hd(Customers),
+  Number = Customer#customer.number,
+  RPPM = Customer#customer.rate_paid_per_minute,
+
+  % look up the phone table matching the phone number
+  {atomic, Phones} = mnesia:transaction(
+    fun() -> qlc:e(
+      qlc:q([ P || 
+        P <- mnesia:table(phone),
+        P#phone.number == Number
+        ])
+      )
+    end
+    ),
+
+  % calculate the sum of duration of the given number
+  Durations = [phone_ets:duration(Phone) || Phone <- Phones],
+  Minutes = stats:sum(Durations),
+  % io:format("~s, ~w, ~w~n", [Number, Minutes, RPPM]),
+
+  % return the result tuple
+  [{Number, Minutes, RPPM * Minutes}].
 
 % TableName - atom, phone or customer
 % FileName - string
